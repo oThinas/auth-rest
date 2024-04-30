@@ -25,7 +25,7 @@ async function register(request: express.Request, response: express.Response) {
     });
 
     return response.status(200).json(user).end();
-  } catch(error) {
+  } catch (error) {
     console.log(error);
     return response.sendStatus(400);
   }
