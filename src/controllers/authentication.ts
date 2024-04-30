@@ -1,8 +1,8 @@
-import { createUser, getUserByEmail } from 'db/users';
+import { createUser, getUserByEmail } from '../db/users';
 import express from 'express';
-import { authentication, random } from 'helpers';
+import { authentication, random } from '../helpers';
 
-async function register(request: express.Request, response: express.Response) {
+export async function register(request: express.Request, response: express.Response) {
   try {
     const { email, password, username} = request.body;
     if (!email || !password || !username) {
