@@ -1,44 +1,43 @@
 import express from 'express';
 import { get, merge } from 'lodash';
 import { getUserBySessionToken } from '../db/users';
+import { INextFunction } from '../interfaces/next';
 
-async function isOwner(request: express.Request, response: express.Response, next: express.NextFunction) {
+async function isOwner(request: express.Request, _: express.Response, next: INextFunction) {
   try {
     const { id } = request.params;
     const currentUserId = get(request, 'identity._id') as string;
     if (!currentUserId) {
-      return response.sendStatus(403);
+      return next({ statusCode: 401, messageCode: 'authentication.unauthenticated' });
     }
 
     if (currentUserId.toString() !== id) {
-      return response.sendStatus(403);
+      return next({ statusCode: 403, messageCode: 'authentication.unauthorized' });
     }
 
     next();
   } catch (error) {
-    console.log(error);
-    return response.sendStatus(400);
+    next(error);
   }
 }
 
-async function isAuthenticated(request: express.Request, response: express.Response, next: express.NextFunction) {
+async function isAuthenticated(request: express.Request, _: express.Response, next: express.NextFunction) {
   try {
     const sessionToken = request.cookies['THINAS-AUTH'];
     if (!sessionToken) {
-      return response.sendStatus(403);
+      return next({ statusCode: 401, messageCode: 'authentication.unauthenticated' });
     }
 
     const existingUser = await getUserBySessionToken(sessionToken);
     if (!existingUser) {
-      return response.sendStatus(403);
+      return next({ statusCode: 401, messageCode: 'authentication.unauthenticated' });
     }
 
     merge(request, { identity: existingUser });
 
     return next();
   } catch (error) {
-    console.log(error);
-    return response.sendStatus(400);
+    next(error);
   }
 }
 

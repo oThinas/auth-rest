@@ -3,8 +3,6 @@ import { IError } from '../interfaces/error';
 import { errorMessages } from '../config/errorMessages';
 
 export function errorHandler(error: IError, _: express.Request, response: express.Response, __: express.NextFunction) {
-  console.log(error);
-
   const { messageCode, statusCode } = error;
   const message = getErrorMessage(error);
 

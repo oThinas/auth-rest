@@ -4,25 +4,31 @@ import { authentication, random } from '../helpers';
 import { INextFunction } from '../interfaces/next';
 
 /**
- * * TODO: Validação do email com api
- * * TODO: Melhores respostas
- * TODO: Documentação das funções
+ * Registra um novo usuário.
+ * 
+ * @param {express.Request} request - Objeto da requisição HTTP contendo os dados do usuário.
+ * @param {express.Response} response - Objeto da resposta HTTP.
+ * @param {express.NextFunction} next - Função de middleware para lidar com erros.
+ * 
+ * @throws {IError} - Lança um erro caso a criação do usuário falhe.
+ * 
+ * @returns Usuário criado.
  */
 async function register(request: express.Request, response: express.Response, next: INextFunction) {
   try {
     const { email, password, username} = request.body;
     if (!email || !password || !username) {
-      next({ statusCode: 400, messageCode: 'invalidData' });
+      return next({ statusCode: 400, messageCode: 'invalidData' });
     }
 
     const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+)(\.[^<>()\[\]\\.,;:\s@"]+)*)@(([^<>()\[\]\\.,;:\s@"]+)(\.[^<>()\[\]\\.,;:\s@"]+)*)$/;
     if (!emailRegex.test(email)) {
-      next({ statusCode: 400, messageCode: 'authentication.invalidEmail' });
+      return next({ statusCode: 400, messageCode: 'authentication.invalidEmail' });
     }
 
     const existingUser = await getUserByEmail(email);
     if (existingUser) {
-      next({ statusCode: 400, messageCode: 'authentication.emailInUse' });
+      return next({ statusCode: 400, messageCode: 'authentication.emailInUse' });
     }
 
     const salt = random();
@@ -41,21 +47,32 @@ async function register(request: express.Request, response: express.Response, ne
   }
 }
 
+/**
+ * Loga um usuário.
+ * 
+ * @param {express.Request} request - Objeto da requisição HTTP contendo os dados do usuário.
+ * @param {express.Response} response - Objeto da resposta HTTP.
+ * @param {express.NextFunction} next - Função de middleware para lidar com erros.
+ * 
+ * @throws {IError} - Lança um erro caso a criação do usuário falhe.
+ * 
+ * @returns Usuário logado.
+ */
 async function login(request: express.Request, response: express.Response, next: INextFunction) {
   try {
     const { email, password } = request.body;
     if (!email || !password) {
-      next({ statusCode: 400, messageCode: 'invalidData' });
+      return next({ statusCode: 400, messageCode: 'invalidData' });
     }
 
     const user = await getUserByEmail(email).select('+authentication.salt +authentication.password');
     if (!user) {
-      next({ statusCode: 400, messageCode: 'authentication.emailNotFound' });
+      return next({ statusCode: 400, messageCode: 'authentication.emailNotFound' });
     }
 
     const expectedHash = authentication(user.authentication.salt, password);
     if (user.authentication.password !== expectedHash) {
-      next({ statusCode: 403, messageCode: 'authentication.wrongCredentials' });
+      return next({ statusCode: 403, messageCode: 'authentication.wrongCredentials' });
     }
 
     const salt = random();

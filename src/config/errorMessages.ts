@@ -5,6 +5,8 @@ export const errorMessages = {
     invalidEmail: 'Email informado não é válido.',
     emailInUse: 'Email informado já está em uso.',
     emailNotFound: 'Email não encontrado.',
-    wrongCredentials: 'Email e/ou senha incorretos.'
+    wrongCredentials: 'Email e/ou senha incorretos.',
+    unauthorized: 'Usuário não autorizado a realizar essa ação.',
+    unauthenticated: 'Usuário não autenticado.',
   },
 };
