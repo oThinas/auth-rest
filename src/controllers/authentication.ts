@@ -1,27 +1,28 @@
 import express from 'express';
 import { createUser, getUserByEmail } from '../db/users';
 import { authentication, random } from '../helpers';
+import { INextFunction } from '../interfaces/next';
 
 /**
  * * TODO: Validação do email com api
- * TODO: Melhores respostas
+ * * TODO: Melhores respostas
  * TODO: Documentação das funções
  */
-async function register(request: express.Request, response: express.Response) {
+async function register(request: express.Request, response: express.Response, next: INextFunction) {
   try {
     const { email, password, username} = request.body;
     if (!email || !password || !username) {
-      return response.sendStatus(400);
+      next({ statusCode: 400, messageCode: 'invalidData' });
     }
 
     const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+)(\.[^<>()\[\]\\.,;:\s@"]+)*)@(([^<>()\[\]\\.,;:\s@"]+)(\.[^<>()\[\]\\.,;:\s@"]+)*)$/;
     if (!emailRegex.test(email)) {
-      return response.status(400).json({ message: 'O email informado não é válido. Por favor, corrija o email e tente novamente.' });
+      next({ statusCode: 400, messageCode: 'authentication.invalidEmail' });
     }
 
     const existingUser = await getUserByEmail(email);
     if (existingUser) {
-      return response.status(400).json({ message: 'O email informado já está cadastrado. Por favor, tente se registrar com um email diferente.' });
+      next({ statusCode: 400, messageCode: 'authentication.emailInUse' });
     }
 
     const salt = random();
@@ -36,26 +37,25 @@ async function register(request: express.Request, response: express.Response) {
 
     return response.status(200).json(user).end();
   } catch (error) {
-    console.log(error);
-    return response.status(500).json({ message: 'Erro ao processar o registro. Por favor, tente novamente mais tarde.' });
+    next(error);
   }
 }
 
-async function login(request: express.Request, response: express.Response) {
+async function login(request: express.Request, response: express.Response, next: INextFunction) {
   try {
     const { email, password } = request.body;
     if (!email || !password) {
-      return response.sendStatus(400);
+      next({ statusCode: 400, messageCode: 'invalidData' });
     }
 
     const user = await getUserByEmail(email).select('+authentication.salt +authentication.password');
     if (!user) {
-      return response.sendStatus(400);
+      next({ statusCode: 400, messageCode: 'authentication.emailNotFound' });
     }
 
     const expectedHash = authentication(user.authentication.salt, password);
     if (user.authentication.password !== expectedHash) {
-      return response.sendStatus(403);
+      next({ statusCode: 403, messageCode: 'authentication.wrongCredentials' });
     }
 
     const salt = random();
@@ -66,8 +66,7 @@ async function login(request: express.Request, response: express.Response) {
 
     return response.status(200).json(user).end();
   } catch (error) {
-    console.log(error);
-    return response.sendStatus(400);
+    next(error);
   }
 }
 

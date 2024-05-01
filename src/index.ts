@@ -7,6 +7,7 @@ import compression from 'compression';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import router from './router';
+import { errorHandler } from './middlewares/errors';
 
 const app = express();
 app.use(cors({
@@ -27,3 +28,4 @@ mongoose.connect(process.env.MONGO_URL);
 mongoose.connection.on('error', (error: Error) => console.log(error));
 
 app.use('/', router());
+app.use(errorHandler)
