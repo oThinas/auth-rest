@@ -2,6 +2,11 @@ import express from 'express';
 import { createUser, getUserByEmail } from '../db/users';
 import { authentication, random } from '../helpers';
 
+/**
+ * * TODO: Validação do email com api
+ * TODO: Melhores respostas
+ * TODO: Documentação das funções
+ */
 async function register(request: express.Request, response: express.Response) {
   try {
     const { email, password, username} = request.body;
@@ -9,9 +14,14 @@ async function register(request: express.Request, response: express.Response) {
       return response.sendStatus(400);
     }
 
+    const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+)(\.[^<>()\[\]\\.,;:\s@"]+)*)@(([^<>()\[\]\\.,;:\s@"]+)(\.[^<>()\[\]\\.,;:\s@"]+)*)$/;
+    if (!emailRegex.test(email)) {
+      return response.status(400).json({ message: 'O email informado não é válido. Por favor, corrija o email e tente novamente.' });
+    }
+
     const existingUser = await getUserByEmail(email);
     if (existingUser) {
-      return response.sendStatus(400);
+      return response.status(400).json({ message: 'O email informado já está cadastrado. Por favor, tente se registrar com um email diferente.' });
     }
 
     const salt = random();
@@ -27,7 +37,7 @@ async function register(request: express.Request, response: express.Response) {
     return response.status(200).json(user).end();
   } catch (error) {
     console.log(error);
-    return response.sendStatus(400);
+    return response.status(500).json({ message: 'Erro ao processar o registro. Por favor, tente novamente mais tarde.' });
   }
 }
 
