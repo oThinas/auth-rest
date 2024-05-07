@@ -45,7 +45,7 @@ async function updateUser(request: express.Request, response: express.Response, 
     const { id } = request.params;
     const { username } = request.body;
     if (!username) {
-      return next({ statusCode: 400, messageCode: 'authentication.emailNotFound' })
+      return next({ statusCode: 400, messageCode: 'invalidData' })
     }
 
     const user = await getUserById(id);
